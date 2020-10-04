@@ -25,9 +25,9 @@ namespace Memory
         {
             Process proc = Process.GetProcessesByName(processName)[0];
 
-            hProc = Memory.MemoryApi.OpenProcess(Memory.MemoryApi.ProcessAccessFlags.All, false, proc.Id);
-            modBase = Memory.MemoryApi.GetModuleBaseAddress(proc, String.Format("{0}.exe", processName));
-            modBase2 = Memory.MemoryApi.GetModuleBaseAddress(proc.Id, String.Format("{0}.exe", processName));
+            hProc = MemoryApi.OpenProcess(Memory.MemoryApi.ProcessAccessFlags.All, false, proc.Id);
+            modBase = MemoryApi.GetModuleBaseAddress(proc, String.Format("{0}.exe", processName));
+            modBase2 = MemoryApi.GetModuleBaseAddress(proc.Id, String.Format("{0}.exe", processName));
 
             if ((hProc == IntPtr.Zero) || (modBase == IntPtr.Zero) || (modBase2 == IntPtr.Zero) || (ErrorStatus() != 0))
             {
@@ -54,7 +54,7 @@ namespace Memory
                 NotifyError("Process not loaded!");
             }
 
-            memoryAddresses.Add(id, Memory.MemoryApi.FindDMAAddy(hProc, (IntPtr)(modBase2 + address), offsets));
+            memoryAddresses.Add(id, MemoryApi.FindDMAAddy(hProc, (IntPtr)(modBase2 + address), offsets));
         }
 
         /// <summary>
@@ -67,14 +67,25 @@ namespace Memory
             if (!isProcessLoaded)
             {
                 NotifyError("Process not loaded!");
-            }
+                return;
+            } 
+            //ErrorStatus is always not equal to 0 on a different thread
+            //else if (ErrorStatus() != 0)
+            //{
+            //    NotifyError(String.Format("Uh Oh, Somethign went wrong! Error code: {0}", ErrorStatus()));
+            //    return;
+            //}
+
 
             var temp = memoryAddresses.FirstOrDefault(x => x.Key == id);
 
             if ((temp.Key == null) || (temp.Key == ""))
+            {
                 NotifyError(String.Format("Could not find an address with id {0}", id));
+                return;
+            }
 
-            Memory.MemoryApi.WriteProcessMemory(hProc, temp.Value, newValue, 4, out _);
+            MemoryApi.WriteProcessMemory(hProc, temp.Value, newValue, 4, out _);
         }
 
         /// <summary>
