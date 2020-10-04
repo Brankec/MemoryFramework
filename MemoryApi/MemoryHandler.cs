@@ -5,23 +5,23 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Timers;
 
-namespace MemoryApi
+namespace Memory
 {
-    class MemoryHandler
+    public class MemoryHandler
     {
-        IntPtr hProc;
-        IntPtr modBase;
-        IntPtr modBase2;
-        public Dictionary<string, IntPtr> memoryAddresses = new Dictionary<string, IntPtr>();
-        bool isProcessLoaded { get; set; }
-        public bool throwException { get; set; }
+        static IntPtr hProc;
+        static IntPtr modBase;
+        static IntPtr modBase2;
+        public static Dictionary<string, IntPtr> memoryAddresses = new Dictionary<string, IntPtr>();
+        static bool isProcessLoaded { get; set; }
+        public static bool throwException { get; set; }
 
         /// <summary>
         /// Loads the client process and initializes the mod base
         /// </summary>
         /// <param name="processName"></param>
         /// <returns>Returns false if it fails successful load the process</returns>
-        public bool LoadProcess(string processName)
+        public static bool LoadProcess(string processName)
         {
             Process proc = Process.GetProcessesByName(processName)[0];
 
@@ -47,7 +47,7 @@ namespace MemoryApi
         /// <param name="id"></param>
         /// <param name="address"></param>
         /// <param name="offsets"></param>
-        public void AddAddress(string id, Int32 address, int[] offsets)
+        public static void AddAddress(string id, Int32 address, int[] offsets)
         {
             if (!isProcessLoaded)
             {
@@ -62,7 +62,7 @@ namespace MemoryApi
         /// </summary>
         /// <param name="id"></param>
         /// <param name="newValue"></param>
-        public void ChangeValueToAddress(string id, int newValue)
+        public static void ChangeValueToAddress(string id, int newValue)
         {
             if (!isProcessLoaded)
             {
@@ -81,7 +81,7 @@ namespace MemoryApi
         /// Checks the last error status thrown by the program
         /// </summary>
         /// <returns>ErrorCode</returns>
-        public int ErrorStatus()
+        public static int ErrorStatus()
         {
             return Marshal.GetLastWin32Error();
         }
@@ -90,7 +90,7 @@ namespace MemoryApi
         /// Throws the error in the command line as a message or as an exception
         /// </summary>
         /// <param name="errorMessage"></param>
-        public void NotifyError(string errorMessage)
+        public static void NotifyError(string errorMessage)
         {
             if (throwException)
             {
