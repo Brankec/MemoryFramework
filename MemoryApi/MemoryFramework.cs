@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
 namespace Memory
@@ -9,28 +8,44 @@ namespace Memory
     class MemoryFramework
     {
         private static Dictionary<string, int> memoryAddressIdToFreeze = new Dictionary<string, int>();
+        private static MemoryHandler memoryHandler = new MemoryHandler();
+
+        public void AddAddress(string id, Int32 address, int[] offsets)
+        {
+            memoryHandler.AddAddress(id, address, offsets);
+        }
+
+        public bool OpenProcess(int pid)
+        {
+            return memoryHandler.OpenProcess(pid);
+        }
+
+        public bool OpenProcess(string pid)
+        {
+            return memoryHandler.OpenProcess(pid);
+        }
 
         /// <summary>
-        /// Adds the memory address from MemoryHandler to later be frozen by a while loop
+        /// Adds the memory address from MemoryHandler to freeze
         /// </summary>
         /// <param name="id"></param>
-        public void AddMemoryAddressToFreeze(string id, int value = 1337)
+        public void AddAddressIdFreeze(string id, int value = 1337)
         {
-            if (MemoryHandler.ErrorStatus() != 0)
+            if (memoryHandler.ErrorStatus() != 0)
             {
-                MemoryHandler.NotifyError(String.Format("Uh Oh, Somethign went wrong! Error code: {0}", MemoryHandler.ErrorStatus()));
+                memoryHandler.NotifyError(String.Format("Uh Oh, Something went wrong! Error code: {0}", memoryHandler.ErrorStatus()));
                 return;
             }
 
-            var temp = MemoryHandler.memoryAddresses.FirstOrDefault(x => x.Key == id);
-            if ((temp.Key == null) || (temp.Key == ""))
+            var temp = memoryHandler.memoryAddresses.FirstOrDefault(x => x.Key == id);
+            if (temp.Key == null)
             {
-                MemoryHandler.NotifyError(String.Format("Could not find an address with id {0}", id));
+                memoryHandler.NotifyError(String.Format("Could not find an address with id {0}", id));
                 return;
             }
 
             var temp2 = memoryAddressIdToFreeze.FirstOrDefault(x => x.Key == id);
-            if ((temp.Key == null) || (temp.Key == ""))
+            if (temp.Key == null)
             {
                 memoryAddressIdToFreeze.Add(temp.Key, value);
             } 
@@ -44,10 +59,10 @@ namespace Memory
         {
             while (true)
             {
-                Thread.Sleep(100);
-
                 foreach (var memoryId in memoryAddressIdToFreeze)
-                    MemoryHandler.ChangeValueToAddress(memoryId.Key, memoryId.Value);
+                    memoryHandler.ChangeValueToAddress(memoryId.Key, memoryId.Value);
+
+                Thread.Sleep(100);
             }
         }
 

@@ -9,22 +9,28 @@ namespace Memory
         {
             try
             {
+                //AssaultCube game example
                 MemoryFramework memFram = new MemoryFramework();
 
-                //AssaultCube game example
-                MemoryHandler.LoadProcess("ac_client");
-
-                MemoryHandler.AddAddress("ammo", 0x0010F418, new int[] { 0x58, 0x1F8, 0x14, 0x0 });
-
-                memFram.AddMemoryAddressToFreeze("ammo", 100);
+                var processFound = memFram.OpenProcess("ac_client");
+                while (!processFound)
+                {
+                    Thread.Sleep(1000);
+                    processFound = memFram.OpenProcess("ac_client");
+                }
 
                 memFram.FreezeAddressValues();
 
-                memFram.AddMemoryAddressToFreeze("ammo", 1000);
+                memFram.AddAddress("ammo", 0x0010F418, new int[] { 0x58, 0x1F8, 0x14, 0x0 });
+                memFram.AddAddress("health", 0x00110C64, new int[] { 0x930, 0x14, 0x0, 0x3DC });
+
+                memFram.AddAddressIdFreeze("ammo", 100);
+                memFram.AddAddressIdFreeze("health", 1000);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.InnerException);
+                Console.WriteLine(String.Format("Exception: {0}", e.Message));
+                Console.WriteLine(String.Format("Inner Exception: {0}", e.InnerException));
             }
         }
     }

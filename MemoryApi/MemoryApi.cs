@@ -26,7 +26,7 @@ namespace Memory
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr OpenProcess(
-        ProcessAccessFlags processAccess, bool bInheritHandle, int processId);
+        UInt32 processAccess, bool bInheritHandle, Int32 processId);
         [StructLayout(LayoutKind.Sequential)]
 
         public struct PROCESSENTRY32

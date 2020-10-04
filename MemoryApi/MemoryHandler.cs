@@ -3,42 +3,111 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Timers;
 
 namespace Memory
 {
     public class MemoryHandler
     {
-        static IntPtr hProc;
-        static IntPtr modBase;
-        static IntPtr modBase2;
-        public static Dictionary<string, IntPtr> memoryAddresses = new Dictionary<string, IntPtr>();
+        public Process hProc;
+        IntPtr pHandle;
+        //IntPtr modBase;
+        //IntPtr modBase2;
+        public Dictionary<string, IntPtr> memoryAddresses = new Dictionary<string, IntPtr>();
+        //public Dictionary<string, IntPtr> modules = new Dictionary<string, IntPtr>();
+        private ProcessModule mainModule;
         static bool isProcessLoaded { get; set; }
-        public static bool throwException { get; set; }
+        public bool throwException { get; set; }
 
         /// <summary>
         /// Loads the client process and initializes the mod base
         /// </summary>
         /// <param name="processName"></param>
         /// <returns>Returns false if it fails successful load the process</returns>
-        public static bool LoadProcess(string processName)
+        public bool OpenProcess(int pid)
         {
-            Process proc = Process.GetProcessesByName(processName)[0];
-
-            hProc = MemoryApi.OpenProcess(Memory.MemoryApi.ProcessAccessFlags.All, false, proc.Id);
-            modBase = MemoryApi.GetModuleBaseAddress(proc, String.Format("{0}.exe", processName));
-            modBase2 = MemoryApi.GetModuleBaseAddress(proc.Id, String.Format("{0}.exe", processName));
-
-            if ((hProc == IntPtr.Zero) || (modBase == IntPtr.Zero) || (modBase2 == IntPtr.Zero) || (ErrorStatus() != 0))
+            if (!IsAdmin())
             {
-                isProcessLoaded = false;
+                Debug.WriteLine("WARNING: You are NOT running this program as admin! Visit https://github.com/erfg12/memory.dll/wiki/Administrative-Privileges");
+                //MessageBox.Show("WARNING: You are NOT running this program as admin!");
+            }
+
+            if (pid <= 0)
+            {
+                Debug.WriteLine("ERROR: OpenProcess given proc ID 0.");
                 return false;
             }
-            else
+
+
+            if (hProc != null && hProc.Id == pid)
+                return true;
+
+            try
             {
+                hProc = Process.GetProcessById(pid);
+
+                if (hProc != null && !hProc.Responding)
+                {
+                    Debug.WriteLine("ERROR: OpenProcess: Process is not responding or null.");
+                    return false;
+                }
+
+                pHandle = MemoryApi.OpenProcess(0x1F0FFF, true, pid);
+                Process.EnterDebugMode();
+
+                if (pHandle == IntPtr.Zero)
+                {
+                    var eCode = Marshal.GetLastWin32Error();
+                    Debug.WriteLine("ERROR: OpenProcess has failed opening a handle to the target process (GetLastWin32ErrorCode: " + eCode + ")");
+                    Process.LeaveDebugMode();
+                    hProc = null;
+                    return false;
+                }
+
                 isProcessLoaded = true;
+                mainModule = hProc.MainModule;
+
+                Debug.WriteLine("Program is operating at Administrative level. Process #" + hProc + " is open and modules are stored.");
+
                 return true;
             }
+            catch
+            {
+                Debug.WriteLine("ERROR: OpenProcess has crashed. Are you trying to hack a x64 game? https://github.com/erfg12/memory.dll/wiki/64bit-Games");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Open the PC game process with all security and access rights.
+        /// </summary>
+        /// <param name="proc">Use process name or process ID here.</param>
+        /// <returns></returns>
+        public bool OpenProcess(string proc)
+        {
+            return OpenProcess(GetProcIdFromName(proc));
+        }
+
+        /// <summary>
+        /// Get the process ID number by process name.
+        /// </summary>
+        /// <param name="name">Example: "eqgame". Use task manager to find the name. Do not include .exe</param>
+        /// <returns></returns>
+        public int GetProcIdFromName(string name)
+        {
+            Process[] processlist = Process.GetProcesses();
+
+            if (name.ToLower().Contains(".exe"))
+                name = name.Replace(".exe", "");
+
+            foreach (Process theprocess in processlist)
+            {
+                if (theprocess.ProcessName.Equals(name, StringComparison.CurrentCultureIgnoreCase))
+                    return theprocess.Id;
+            }
+
+            return 0;
         }
 
         /// <summary>
@@ -47,14 +116,22 @@ namespace Memory
         /// <param name="id"></param>
         /// <param name="address"></param>
         /// <param name="offsets"></param>
-        public static void AddAddress(string id, Int32 address, int[] offsets)
+        public void AddAddress(string id, Int32 address, int[] offsets)
         {
             if (!isProcessLoaded)
             {
                 NotifyError("Process not loaded!");
             }
 
-            memoryAddresses.Add(id, MemoryApi.FindDMAAddy(hProc, (IntPtr)(modBase2 + address), offsets));
+            var temp = memoryAddresses.FirstOrDefault(x => x.Key == id);
+
+            if (temp.Key != null)
+            {
+                NotifyError(String.Format("Address with id {0} already exists", id));
+                return;
+            }
+
+            memoryAddresses.Add(id, MemoryApi.FindDMAAddy(pHandle, (IntPtr)(mainModule.BaseAddress + address), offsets));
         }
 
         /// <summary>
@@ -62,7 +139,7 @@ namespace Memory
         /// </summary>
         /// <param name="id"></param>
         /// <param name="newValue"></param>
-        public static void ChangeValueToAddress(string id, int newValue)
+        public void ChangeValueToAddress(string id, int newValue)
         {
             if (!isProcessLoaded)
             {
@@ -79,20 +156,34 @@ namespace Memory
 
             var temp = memoryAddresses.FirstOrDefault(x => x.Key == id);
 
-            if ((temp.Key == null) || (temp.Key == ""))
+            if (temp.Key == null)
             {
                 NotifyError(String.Format("Could not find an address with id {0}", id));
                 return;
             }
 
-            MemoryApi.WriteProcessMemory(hProc, temp.Value, newValue, 4, out _);
+            MemoryApi.WriteProcessMemory(pHandle, temp.Value, newValue, 4, out _);
+        }
+
+
+        /// <summary>
+        /// Check if program is running with administrative privileges. Read about it here: https://github.com/erfg12/memory.dll/wiki/Administrative-Privileges
+        /// </summary>
+        /// <returns></returns>
+        public bool IsAdmin()
+        {
+            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+            {
+                WindowsPrincipal principal = new WindowsPrincipal(identity);
+                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
         }
 
         /// <summary>
         /// Checks the last error status thrown by the program
         /// </summary>
         /// <returns>ErrorCode</returns>
-        public static int ErrorStatus()
+        public int ErrorStatus()
         {
             return Marshal.GetLastWin32Error();
         }
@@ -101,7 +192,7 @@ namespace Memory
         /// Throws the error in the command line as a message or as an exception
         /// </summary>
         /// <param name="errorMessage"></param>
-        public static void NotifyError(string errorMessage)
+        public void NotifyError(string errorMessage)
         {
             if (throwException)
             {
