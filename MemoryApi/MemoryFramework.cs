@@ -7,8 +7,8 @@ namespace Memory
 {
     class MemoryFramework
     {
-        private static Dictionary<string, int> memoryAddressIdToFreeze = new Dictionary<string, int>();
-        private static MemoryHandler memoryHandler = new MemoryHandler();
+        private static Dictionary<string, Value> memoryAddressIdToFreeze = new Dictionary<string, Value>();
+        public static MemoryHandler memoryHandler = new MemoryHandler();
 
         public void AddAddress(string id, Int32 address, int[] offsets)
         {
@@ -29,7 +29,7 @@ namespace Memory
         /// Adds the memory address from MemoryHandler to freeze
         /// </summary>
         /// <param name="id"></param>
-        public void AddAddressIdFreeze(string id, int value = 1337)
+        public void AddAddressIdFreeze(string id, string value = "1337", string type = "int")
         {
             if (memoryHandler.ErrorStatus() != 0)
             {
@@ -47,11 +47,11 @@ namespace Memory
             var temp2 = memoryAddressIdToFreeze.FirstOrDefault(x => x.Key == id);
             if (temp.Key == null)
             {
-                memoryAddressIdToFreeze.Add(temp.Key, value);
+                memoryAddressIdToFreeze.Add(temp.Key, new Value { value = value, type = type });
             } 
-            else if(temp2.Value != value)
+            else if(temp2.Value.value != value)
             {
-                memoryAddressIdToFreeze[temp.Key] = value;
+                memoryAddressIdToFreeze[temp.Key] = new Value { value = value, type = type };
             }
         }
 
@@ -60,7 +60,7 @@ namespace Memory
             while (true)
             {
                 foreach (var memoryId in memoryAddressIdToFreeze)
-                    memoryHandler.ChangeValueToAddress(memoryId.Key, memoryId.Value);
+                    memoryHandler.WriteValueToAddress(memoryId.Key, memoryId.Value.value, memoryId.Value.type);
 
                 Thread.Sleep(100);
             }
@@ -71,6 +71,11 @@ namespace Memory
             ThreadStart childref = new ThreadStart(FreezeAddressValuesThread);
             Thread childThread = new Thread(childref);
             childThread.Start();
+        }
+
+        public void TriggerBot(string id, float valueToLook, float valueToStop)
+        {
+
         }
     }
 }

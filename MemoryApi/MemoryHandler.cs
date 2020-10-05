@@ -8,6 +8,12 @@ using System.Timers;
 
 namespace Memory
 {
+    public struct Value
+    {
+        public string value;
+        public string type;
+    }
+
     public class MemoryHandler
     {
         public Process hProc;
@@ -139,20 +145,13 @@ namespace Memory
         /// </summary>
         /// <param name="id"></param>
         /// <param name="newValue"></param>
-        public void ChangeValueToAddress(string id, int newValue)
+        public void WriteValueToAddress(string id, string newValue, string type = "int")
         {
             if (!isProcessLoaded)
             {
                 NotifyError("Process not loaded!");
                 return;
             } 
-            //ErrorStatus is always not equal to 0 on a different thread
-            //else if (ErrorStatus() != 0)
-            //{
-            //    NotifyError(String.Format("Uh Oh, Somethign went wrong! Error code: {0}", ErrorStatus()));
-            //    return;
-            //}
-
 
             var temp = memoryAddresses.FirstOrDefault(x => x.Key == id);
 
@@ -162,7 +161,16 @@ namespace Memory
                 return;
             }
 
-            MemoryApi.WriteProcessMemory(pHandle, temp.Value, newValue, 4, out _);
+            switch(type)
+            {
+                case "int":
+                    MemoryApi.WriteProcessMemory(pHandle, temp.Value, Int32.Parse(newValue), 4, out _);
+                    break;
+
+                case "float":
+                    MemoryApi.WriteProcessMemory(pHandle, temp.Value, float.Parse(newValue), 4, out _);
+                    break;
+            }
         }
 
 
