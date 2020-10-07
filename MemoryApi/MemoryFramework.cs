@@ -10,9 +10,9 @@ namespace Memory
         private static Dictionary<string, Value> memoryAddressIdToFreeze = new Dictionary<string, Value>();
         public static MemoryHandler memoryHandler = new MemoryHandler();
 
-        public void AddAddress(string id, Int32 address, int[] offsets)
+        public void AddAddress(string id, Int32 address, int[] offsets, string module = "main")
         {
-            memoryHandler.AddAddress(id, address, offsets);
+            memoryHandler.AddAddress(id, address, offsets, module);
         }
 
         public bool OpenProcess(int pid)
@@ -29,7 +29,7 @@ namespace Memory
         /// Adds the memory address from MemoryHandler to freeze
         /// </summary>
         /// <param name="id"></param>
-        public void AddAddressIdFreeze(string id, string value = "1337", string type = "int")
+        public void AddAddressIdToFreeze(string id, string value = "1337", string type = "int")
         {
             if (memoryHandler.ErrorStatus() != 0)
             {
@@ -59,10 +59,10 @@ namespace Memory
         {
             while (true)
             {
+                Thread.Sleep(10);
+
                 foreach (var memoryId in memoryAddressIdToFreeze)
                     memoryHandler.WriteValueToAddress(memoryId.Key, memoryId.Value.value, memoryId.Value.type);
-
-                Thread.Sleep(100);
             }
         }
 

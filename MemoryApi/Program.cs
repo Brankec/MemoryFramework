@@ -12,26 +12,28 @@ namespace Memory
                 //AssaultCube game example
                 MemoryFramework memFram = new MemoryFramework();
 
-                var processFound = memFram.OpenProcess("ac_client");
+                var processFound = memFram.OpenProcess("hl");
                 while (!processFound)
                 {
                     Thread.Sleep(1000);
-                    processFound = memFram.OpenProcess("ac_client");
+                    processFound = memFram.OpenProcess("hl");
                 }
 
+
+                memFram.AddAddress("health", 0x00843D60, new int[] { 0x7C, 0x4, 0x2AC, 0x4, 0x74, 0x4, 0x160 }, "hw.dll");
+                memFram.AddAddress("armor", 0x00843D60, new int[] { 0x7C, 0x4, 0x2AC, 0x4, 0x74, 0x4, 0x1BC }, "hw.dll");
+                memFram.AddAddress("xPosition", 0x00843D60, new int[] { 0x7C, 0x4, 0x2AC, 0x4, 0x74, 0x4, 0x4 }, "hw.dll");
+                memFram.AddAddress("zPosition", 0x00843D60, new int[] { 0x7C, 0x4, 0x2AC, 0x4, 0x74, 0x4, 0xC }, "hw.dll");
+                memFram.AddAddress("yPosition", 0x00843D60, new int[] { 0x7C, 0x4, 0x2AC, 0x4, 0x74, 0x4, 0x10 }, "hw.dll");
+                memFram.AddAddress("verticalAxis", 0x00843D60, new int[] { 0x7C, 0x4, 0x2AC, 0x4, 0x74, 0x4, 0x74 }, "hw.dll"); //read only
+                memFram.AddAddress("horizontalAxis", 0x00843D60, new int[] { 0x7C, 0x4, 0x2AC, 0x4, 0x74, 0x4, 0x78 }, "hw.dll"); //read only
+                memFram.AddAddress("velocity", 0x00807694, new int[] { 0x7C, 0x4, 0x2AC, 0x4, 0x280, 0xA8}, "hw.dll");
+
+                memFram.AddAddressIdToFreeze("health", "1000", "float");
+                memFram.AddAddressIdToFreeze("armor", "1000", "float");
+                memFram.AddAddressIdToFreeze("velocity", "5", "float");
+
                 memFram.FreezeAddressValues();
-
-                memFram.AddAddress("ammo", 0x0010F418, new int[] { 0x58, 0x1F8, 0x14, 0x0 });
-                memFram.AddAddress("health", 0x00110C64, new int[] { 0x930, 0x14, 0x0, 0x3DC });
-                memFram.AddAddress("health-singleplayer", 0x0010F418, new int[] { 0x58, 0x1E0, 0x78, 0xF8 });
-                memFram.AddAddress("Y Coordinate", 0x10F4F4, new int[] { 0x3C });
-
-                //MemoryFramework.memoryHandler.WriteValueToAddress("Y Coordinate", "10", "float");
-
-                memFram.AddAddressIdFreeze("ammo", "100");
-                memFram.AddAddressIdFreeze("health", "1000");
-                memFram.AddAddressIdFreeze("health-singleplayer", "1000");
-                memFram.AddAddressIdFreeze("Y Coordinate", "10", "float");
             }
             catch (Exception e)
             {

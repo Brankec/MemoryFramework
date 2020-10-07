@@ -73,6 +73,7 @@ namespace Memory
 
                 isProcessLoaded = true;
                 mainModule = hProc.MainModule;
+                GetModules();
 
                 Debug.WriteLine("Program is operating at Administrative level. Process #" + hProc + " is open and modules are stored.");
 
@@ -82,6 +83,27 @@ namespace Memory
             {
                 Debug.WriteLine("ERROR: OpenProcess has crashed. Are you trying to hack a x64 game? https://github.com/erfg12/memory.dll/wiki/64bit-Games");
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Dictionary with our opened process module names with addresses.
+        /// </summary>
+        public Dictionary<string, IntPtr> modules = new Dictionary<string, IntPtr>();
+
+        /// <summary>
+        /// Builds the process modules dictionary (names with addresses).
+        /// </summary>
+        public void GetModules()
+        {
+            if (hProc == null)
+                return;
+
+            modules.Clear();
+            foreach (ProcessModule Module in hProc.Modules)
+            {
+                if (!string.IsNullOrEmpty(Module.ModuleName) && !modules.ContainsKey(Module.ModuleName))
+                    modules.Add(Module.ModuleName, Module.BaseAddress);
             }
         }
 
@@ -122,8 +144,10 @@ namespace Memory
         /// <param name="id"></param>
         /// <param name="address"></param>
         /// <param name="offsets"></param>
-        public void AddAddress(string id, Int32 address, int[] offsets)
+        public void AddAddress(string id, Int32 address, int[] offsets, string module = "main")
         {
+            IntPtr? baseAddress;
+
             if (!isProcessLoaded)
             {
                 NotifyError("Process not loaded!");
@@ -137,7 +161,17 @@ namespace Memory
                 return;
             }
 
-            memoryAddresses.Add(id, MemoryApi.FindDMAAddy(pHandle, (IntPtr)(mainModule.BaseAddress + address), offsets));
+            if (module != "main")
+            {
+                baseAddress = modules.FirstOrDefault(x => x.Key == module).Value;
+
+                if (baseAddress == null)
+                    NotifyError(String.Format("Could not find module with name {0}", baseAddress));
+            }
+            else
+                baseAddress = mainModule.BaseAddress;
+
+            memoryAddresses.Add(id, MemoryApi.FindDMAAddy(pHandle, (IntPtr)(baseAddress + address), offsets));
         }
 
         /// <summary>
