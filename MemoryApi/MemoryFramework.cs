@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 
 namespace Memory
@@ -23,6 +24,26 @@ namespace Memory
         public bool OpenProcess(string pid)
         {
             return memoryHandler.OpenProcess(pid);
+        }
+
+        public void FlyMode(string xId, string zId, string yId, string xAngleId, string yAngleId, float speed)
+        {
+            while (true)
+            {
+                Thread.Sleep(10);
+                Vector3 d = new Vector3();
+
+                d.X = (float)memoryHandler.ReadFloatValueFromAddress(xId);
+                d.Z = (float)memoryHandler.ReadFloatValueFromAddress(zId);
+
+                d.X += (float)(Math.Cos(DegreeToRadian((float)(memoryHandler.ReadFloatValueFromAddress(xAngleId)))) * speed);
+                ////d.Y = (float)(Math.Sin(DegreeToRadian((float)(memoryHandler.ReadFloatValueFromAddress(xAngleId) - 90))) * speed);
+                d.Z += (float)(Math.Sin(DegreeToRadian((float)(memoryHandler.ReadFloatValueFromAddress(xAngleId)))) * speed);
+
+                memoryHandler.WriteValueToAddress(xId, d.X.ToString(), "float");
+                ////memoryHandler.WriteValueToAddress(yId, d.Y.ToString(), "float");
+                memoryHandler.WriteValueToAddress(zId, d.Z.ToString(), "float");
+            }
         }
 
         /// <summary>
@@ -71,6 +92,11 @@ namespace Memory
             ThreadStart childref = new ThreadStart(FreezeAddressValuesThread);
             Thread childThread = new Thread(childref);
             childThread.Start();
+        }
+
+        float DegreeToRadian(float degrees)
+        {
+            return degrees * (3.1415927f / 180);
         }
 
         public void TriggerBot(string id, float valueToLook, float valueToStop)
