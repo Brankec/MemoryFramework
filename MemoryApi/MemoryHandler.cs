@@ -207,6 +207,48 @@ namespace Memory
             }
         }
 
+        /// <summary>
+        /// Read a float value from an address.
+        /// </summary>
+        /// <param name="code">address, module + pointer + offset, module + offset OR label in .ini file.</param>
+        /// <param name="file">path and name of ini file. (OPTIONAL)</param>
+        /// <param name="round">Round the value to 2 decimal places</param>
+        public float? ReadFloatValueFromAddress(string id, bool round = true)
+        {
+            if (!isProcessLoaded)
+            {
+                NotifyError("Process not loaded!");
+                return null;
+            }
+
+            IntPtr address = memoryAddresses.FirstOrDefault(x => x.Key == id).Value;
+
+            if (address == null)
+            {
+                NotifyError(String.Format("Could not find an address with id {0}", id));
+                return null;
+            }
+
+            byte[] memory = new byte[4];
+            try
+            {
+                if (MemoryApi.ReadProcessMemory(pHandle, address, memory, 4, out _))
+                {
+                    float addressValue = BitConverter.ToSingle(memory, 0);
+                    float returnValue = (float)addressValue;
+                    if (round)
+                        returnValue = (float)Math.Round(addressValue, 2);
+                    return returnValue;
+                }
+                else
+                    return 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
 
         /// <summary>
         /// Check if program is running with administrative privileges. Read about it here: https://github.com/erfg12/memory.dll/wiki/Administrative-Privileges
