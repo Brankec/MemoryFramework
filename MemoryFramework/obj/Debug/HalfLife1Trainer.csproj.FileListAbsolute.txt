@@ -1,0 +1,9 @@
+D:\Projects\HalfLife1Trainer\HalfLife1Trainer\bin\Debug\HalfLife1Trainer.exe.config
+D:\Projects\HalfLife1Trainer\HalfLife1Trainer\bin\Debug\HalfLife1Trainer.exe
+D:\Projects\HalfLife1Trainer\HalfLife1Trainer\bin\Debug\HalfLife1Trainer.pdb
+D:\Projects\HalfLife1Trainer\HalfLife1Trainer\obj\Debug\HalfLife1Trainer.csprojAssemblyReference.cache
+D:\Projects\HalfLife1Trainer\HalfLife1Trainer\obj\Debug\HalfLife1Trainer.Properties.Resources.resources
+D:\Projects\HalfLife1Trainer\HalfLife1Trainer\obj\Debug\HalfLife1Trainer.csproj.GenerateResource.cache
+D:\Projects\HalfLife1Trainer\HalfLife1Trainer\obj\Debug\HalfLife1Trainer.csproj.CoreCompileInputs.cache
+D:\Projects\HalfLife1Trainer\HalfLife1Trainer\obj\Debug\HalfLife1Trainer.exe
+D:\Projects\HalfLife1Trainer\HalfLife1Trainer\obj\Debug\HalfLife1Trainer.pdb
