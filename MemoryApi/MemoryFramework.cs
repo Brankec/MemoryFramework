@@ -26,24 +26,30 @@ namespace Memory
             return memoryHandler.OpenProcess(pid);
         }
 
-        public void FlyMode(string xId, string zId, string yId, string xAngleId, string yAngleId, float speed)
+        /// <summary>
+        /// Causes the given xyz positions to move based on the cameras xy angle position. Requires some sort of key press system to call this method in a loop.
+        /// </summary>
+        /// <param name="xId"></param>
+        /// <param name="zId"></param>
+        /// <param name="yId"></param>
+        /// <param name="xAngleId"></param>
+        /// <param name="yAngleId"></param>
+        /// <param name="speed"></param>
+        public void DirectionalPositionMovement(string xId, string zId, string yId, string xAngleId, string yAngleId, float speed)
         {
-            while (true)
-            {
-                Thread.Sleep(10);
-                Vector3 d = new Vector3();
+            Vector3 d = new Vector3();
 
-                d.X = (float)memoryHandler.ReadFloatValueFromAddress(xId);
-                d.Z = (float)memoryHandler.ReadFloatValueFromAddress(zId);
+            d.X = (float)memoryHandler.ReadFloatValueFromAddress(xId);
+            d.Z = (float)memoryHandler.ReadFloatValueFromAddress(zId);
+            d.Y = (float)memoryHandler.ReadFloatValueFromAddress(yId);
 
-                d.X += (float)(Math.Cos(DegreeToRadian((float)(memoryHandler.ReadFloatValueFromAddress(xAngleId)))) * speed);
-                ////d.Y = (float)(Math.Sin(DegreeToRadian((float)(memoryHandler.ReadFloatValueFromAddress(xAngleId) - 90))) * speed);
-                d.Z += (float)(Math.Sin(DegreeToRadian((float)(memoryHandler.ReadFloatValueFromAddress(xAngleId)))) * speed);
+            d.X += (float)(Math.Cos(DegreeToRadian((float)(memoryHandler.ReadFloatValueFromAddress(xAngleId)))) * speed);
+            d.Y -= (float)(Math.Sin(DegreeToRadian((float)(memoryHandler.ReadFloatValueFromAddress(yAngleId)))) * speed);
+            d.Z += (float)(Math.Sin(DegreeToRadian((float)(memoryHandler.ReadFloatValueFromAddress(xAngleId)))) * speed);
 
-                memoryHandler.WriteValueToAddress(xId, d.X.ToString(), "float");
-                ////memoryHandler.WriteValueToAddress(yId, d.Y.ToString(), "float");
-                memoryHandler.WriteValueToAddress(zId, d.Z.ToString(), "float");
-            }
+            memoryHandler.WriteValueToAddress(xId, d.X.ToString(), "float");
+            memoryHandler.WriteValueToAddress(yId, d.Y.ToString(), "float");
+            memoryHandler.WriteValueToAddress(zId, d.Z.ToString(), "float");
         }
 
         /// <summary>
