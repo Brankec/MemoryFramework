@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Memory
 {
     class MemoryFramework
     {
-        private static Dictionary<string, Value> memoryAddressIdToFreeze = new Dictionary<string, Value>();
+        private static ConcurrentDictionary<string, Value> memoryAddressIdToFreeze = new ConcurrentDictionary<string, Value>();
         public static MemoryHandler memoryHandler = new MemoryHandler();
 
         public void AddAddress(string id, Int32 address, int[] offsets, string module = "main")
@@ -58,11 +60,11 @@ namespace Memory
         /// <param name="id"></param>
         public void AddAddressIdToFreeze(string id, string value = "1337", string type = "int")
         {
-            if (memoryHandler.ErrorStatus() != 0)
-            {
-                memoryHandler.NotifyError(String.Format("Uh Oh, Something went wrong! Error code: {0}", memoryHandler.ErrorStatus()));
-                return;
-            }
+            //if (memoryHandler.ErrorStatus() != 0)
+            //{
+            //    memoryHandler.NotifyError(String.Format("Uh Oh, Something went wrong! Error code: {0}", memoryHandler.ErrorStatus()));
+            //    return;
+            //}
 
             var temp = memoryHandler.memoryAddresses.FirstOrDefault(x => x.Key == id);
             if (temp.Key == null)
@@ -74,11 +76,33 @@ namespace Memory
             var temp2 = memoryAddressIdToFreeze.FirstOrDefault(x => x.Key == id);
             if (temp.Key == null)
             {
-                memoryAddressIdToFreeze.Add(temp.Key, new Value { value = value, type = type });
+                memoryAddressIdToFreeze.TryAdd(temp.Key, new Value { value = value, type = type });
             } 
             else if(temp2.Value.value != value)
             {
                 memoryAddressIdToFreeze[temp.Key] = new Value { value = value, type = type };
+            }
+        }
+
+        public void RemoveAddressIdToFreeze(string id)
+        {
+            //if (memoryHandler.ErrorStatus() != 0)
+            //{
+            //    memoryHandler.NotifyError(String.Format("Uh Oh, Something went wrong! Error code: {0}", memoryHandler.ErrorStatus()));
+            //    return;
+            //}
+
+            var temp = memoryHandler.memoryAddresses.FirstOrDefault(x => x.Key == id);
+            if (temp.Key == null)
+            {
+                memoryHandler.NotifyError(String.Format("Could not find an address with id {0}", id));
+                return;
+            }
+
+            var temp2 = memoryAddressIdToFreeze.FirstOrDefault(x => x.Key == id);
+            if (temp2.Key != null)
+            {
+                memoryAddressIdToFreeze.TryRemove(temp2.Key, out Value v);
             }
         }
 
@@ -95,9 +119,12 @@ namespace Memory
 
         public void FreezeAddressValues()
         {
-            ThreadStart childref = new ThreadStart(FreezeAddressValuesThread);
-            Thread childThread = new Thread(childref);
-            childThread.Start();
+            //ThreadStart childref = new ThreadStart(FreezeAddressValuesThread);
+            //Thread childThread = new Thread(childref);
+            //childThread.Start();
+            Task t = Task.Factory.StartNew(() => {
+                FreezeAddressValuesThread();
+            });
         }
 
         float DegreeToRadian(float degrees)
