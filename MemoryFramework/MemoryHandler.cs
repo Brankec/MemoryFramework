@@ -36,6 +36,8 @@ namespace Memory
             if (!IsAdmin())
             {
                 Debug.WriteLine("WARNING: You are NOT running this program as admin! Visit https://github.com/erfg12/memory.dll/wiki/Administrative-Privileges");
+                NotifyError("WARNING: You are NOT running this program as admin! Visit https://github.com/erfg12/memory.dll/wiki/Administrative-Privileges");
+                throw new Exception("WARNING: You are NOT running this program as admin! Visit https://github.com/erfg12/memory.dll/wiki/Administrative-Privileges");
                 //MessageBox.Show("WARNING: You are NOT running this program as admin!");
             }
 

@@ -11,18 +11,18 @@ namespace Memory
     class MemoryFramework
     {
         private static ConcurrentDictionary<string, Value> memoryAddressIdToFreeze = new ConcurrentDictionary<string, Value>();
-        public static MemoryHandler memoryHandler = new MemoryHandler();
+        public MemoryHandler memoryHandler = new MemoryHandler();
 
         public void AddAddress(string id, Int32 address, int[] offsets, string module = "main")
         {
             memoryHandler.AddAddress(id, address, offsets, module);
         }
-
+        
         public bool OpenProcess(int pid)
         {
             return memoryHandler.OpenProcess(pid);
         }
-
+        
         public bool OpenProcess(string pid)
         {
             return memoryHandler.OpenProcess(pid);
@@ -74,7 +74,7 @@ namespace Memory
             }
 
             var temp2 = memoryAddressIdToFreeze.FirstOrDefault(x => x.Key == id);
-            if (temp.Key == null)
+            if (temp2.Key == null)
             {
                 memoryAddressIdToFreeze.TryAdd(temp.Key, new Value { value = value, type = type });
             } 
@@ -106,7 +106,7 @@ namespace Memory
             }
         }
 
-        private static void FreezeAddressValuesThread()
+        private void FreezeAddressValuesThread()
         {
             while (true)
             {
@@ -119,9 +119,6 @@ namespace Memory
 
         public void FreezeAddressValues()
         {
-            //ThreadStart childref = new ThreadStart(FreezeAddressValuesThread);
-            //Thread childThread = new Thread(childref);
-            //childThread.Start();
             Task t = Task.Factory.StartNew(() => {
                 FreezeAddressValuesThread();
             });
